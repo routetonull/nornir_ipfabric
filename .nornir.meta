@@ -1,0 +1,11 @@
+---
+name: nornir_ipfabric
+summary: |
+  IP Fabric Inventory plugin for Nornir.
+nornir_version: ~3
+categories:
+  - ipfabric
+  - networking
+intro_file: README.md
+invenory_plugins:
+  - nornir_ipfabric.plugins.inventory:IPFabricInventory

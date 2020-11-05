@@ -1,0 +1,17 @@
+.vscode
+venv
+*.env
+lib
+dist
+build
+nornir.log
+notes.md
+pycache
+*.egg-info
+.tox
+.pytest_cache
+*.pyc
+*egg-info/
+__pycache__/
+pytest_cache/
+__pycache__/

@@ -1,0 +1,7 @@
+---
+inventory:
+  plugin: IPFInventory
+  options:
+    ipf_url: "https://ipfabric.local"
+    ipf_user: "admin"
+    ipf_password: "mySecretPassword"
