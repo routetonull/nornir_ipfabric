@@ -91,6 +91,7 @@ class IPFabricInventory(Inventory):
         ipf_url: Optional[str] = None,
         ipf_user: Optional[str] = None,
         ipf_password: Optional[str] = None,
+        ipf_token: Optional[str] = None,
         ipf_snapshot: Optional[str] = "$last",
         ssl_verify: Union[bool, str] = False,
         **kwargs: Any,
@@ -103,6 +104,7 @@ class IPFabricInventory(Inventory):
             ipf_url: IP Fabric url, defaults to http://localhost:8080.
             ipf_user: username to access IP Fabric API
             ipf_password: password to access IP Fabric API
+            ipf_token: API token to access IP Fabric API
             ipf_snapshot: snapshot to read, details here https://docs.ipfabric.io/api/#tables
             ssl_verify: Enable/disable certificate validation or provide path to CA bundle file
         """
@@ -119,6 +121,9 @@ class IPFabricInventory(Inventory):
             if ipf_password
             else os.environ.get("IPF_PASSWORD", "admin")
         )
+        self.ipf_token = (
+            ipf_token if ipf_token else os.environ.get("IPF_TOKEN", False)
+        )
         self.ipf_snapshot = "$last"
         self.ssl_verify = False
 
@@ -128,13 +133,21 @@ class IPFabricInventory(Inventory):
         """
 
         url = f"{self.ipf_url}/api/v1/tables/inventory/devices"
-        credentials = b64encode(
-            f"{self.ipf_user}:{self.ipf_password}".encode("utf-8")
-        ).decode("utf-8")
-        headers = {
-            "Content-type": "application/json",
-            "Authorization": f"Basic {credentials}",
-        }
+
+        if self.ipf_token:
+            headers = {
+                "Content-type": "application/json",
+                "X-API-Token": self.ipf_token,
+            }
+        else:
+            credentials = b64encode(
+                f"{self.ipf_user}:{self.ipf_password}".encode("utf-8")
+            ).decode("utf-8")
+            headers = {
+                "Content-type": "application/json",
+                "Authorization": f"Basic {credentials}",
+            }
+
         data = {
             "columns": [
                 "loginIp",
@@ -159,12 +172,12 @@ class IPFabricInventory(Inventory):
             )
         except:
             raise ValueError(
-                f"Failed to get devices from IP Fabric {self.ipf_url} with user {self.ipf_user}"
+                f"Failed to get devices from IP Fabric {self.ipf_url}"
             )
 
         if not deviceInventory.status_code == 200:
             raise ValueError(
-                f"Failed to get devices from IP Fabric {self.ipf_url} with user {self.ipf_user}"
+                f"Failed to get devices from IP Fabric {self.ipf_url}"
             )
 
         ipf_devices = json.loads(deviceInventory.content).get("data")
