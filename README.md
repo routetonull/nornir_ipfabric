@@ -5,11 +5,6 @@
 [![Version](https://img.shields.io/pypi/v/nornir-ipfabric)](https://pypi.org/project/nornir-ipfabric/)
 
 
-
-
-
-
-
 nornir_ipfabric
 ==============
 
@@ -42,7 +37,22 @@ export IPF_USER=admin
 export IPF_PASSWORD=mySecretPassword
 ```
 
+If IP Fabric version 3.7 or above is in use, [token authentication](https://ipfabric.atlassian.net/wiki/spaces/ND/pages/1448575064/API+tokens) is available
+
+```sh
+export IPF_URL=https://ipfabric.local
+export IPF_TOKEN=myToken
+```
+
+```python
+from nornir import InitNornir
+nr = InitNornir(inventory={"plugin": "IPFabricInventory"})
+```
+
+
 ## Using the InitNornir function
+
+Init with credentials
 
 ```python
 from nornir import InitNornir
@@ -59,9 +69,26 @@ nr = InitNornir(
     )
 ```
 
+Init with token
+
+```python
+from nornir import InitNornir
+nr = InitNornir(
+    inventory=
+        {
+            "plugin": "IPFabricInventory",
+            "options": {
+                "ipf_url":"https://ipfabric.local",
+                "ipf_token":"myToken",
+                },
+        },
+    )
+```
+
+
 ## Using the Nornir configuration file
 
-File *config.yaml*
+File *config.yaml* with credendials
 
 ```yaml
 ---
@@ -73,6 +100,17 @@ inventory:
     ipf_password: "mySecretPassword"
 ```
 
+File *config.yaml* with token
+
+```yaml
+---
+inventory:
+  plugin: IPFInventory
+  options:
+    ipf_url: "https://ipfabric.local"
+    ipf_token: "myToken"
+```
+
 Usage:
 
 ```python
@@ -81,11 +119,11 @@ nr = InitNornir(config_file="config.yaml",inventory={"plugin": "IPFabricInventor
 ```
 
 
-
 # Useful Links
 
 - [IP Fabric website](https://www.ipfabric.io)
 - [IP Fabric channel on Slack ](https://networktocode.slack.com/)
 - [Nornir](https://github.com/nornir-automation/nornir)
+- [Nornir plugins page](https://nornir.tech/nornir/plugins/)
 - [Nornir Discourse Group](https://nornir.discourse.group)
 - [An Introduction to Nornir](https://pynet.twb-tech.com/blog/nornir/intro.html)
