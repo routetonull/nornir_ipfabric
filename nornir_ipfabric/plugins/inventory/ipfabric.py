@@ -1,5 +1,6 @@
 """nornir_ipfabric.inventory.ipfabric"""
 from base64 import b64encode
+from nornir.core.inventory import ConnectionOptions
 from nornir.core.inventory import Defaults
 from nornir.core.inventory import Groups
 from nornir.core.inventory import Host
@@ -32,11 +33,13 @@ def _get_inventory_element(
     # list of netmiko supported device_types https://github.com/ktbyers/netmiko/blob/master/netmiko/ssh_dispatcher.py
     netmiko_platform_map = {
         "asa": "cisco_asa",
+        "fortinet": "fortinet",
+        "ios": "cisco_ios",
         "ios-xe": "cisco_xe",
         "ios-xr": "cisco_xr",
         "nx-os": "cisco_nxos",
-        "wlc-air": "cisco_wlc",
         "pa-vm": "paloalto",
+        "wlc-air": "cisco_wlc",
     }
     # napalm platform mapping https://napalm.readthedocs.io/en/latest/support/
     napalm_platform_map = {
@@ -44,11 +47,19 @@ def _get_inventory_element(
         "ios-xe": "ios",
         "ios-rx": "iosxr",
     }
+    # genie platform mapping https://github.com/CiscoTestAutomation/unicon.plugins/tree/master/src/unicon/plugins
+    genie_platform_map = {
+        "nx-os": "nxos",
+        "ios": "ios",
+        "ios-xe": "iosxe",
+        "ios-rx": "iosxr",
+        "asa": "asa",
+    }
     data = {}
     data["address"] = (device.get("loginIp"),)
     data["family"] = device.get("family") or device.get("vendor")
     data["hostname"] = device.get("hostname")
-    data["platform"] = device.get("platform")
+    data["ipf_platform"] = device.get("platform")
     data["protocol"] = device.get("loginType")
     data["serial"] = device.get("sn")
     data["siteName"] = device.get("siteName")
@@ -56,27 +67,19 @@ def _get_inventory_element(
     data["version"] = device.get("version")
 
     return typ(
-        name=device.get("loginIp", ""),
+        name=device.get("hostname"),
+        hostname=device.get("loginIp"),
+        port=22 if device.get("loginType") == "ssh" else 23,
         # set netmiko platform, use family or vendor if no match
         platform=netmiko_platform_map.get(
             device["family"], device.get("platform", device.get("vendor", ""))
         ),
-        # set groups from site, platform and vendor for filtering
-        groups=[
-            device.get("siteName", None),
-            device.get("platform", None),
-            device.get("family", None),
-            device.get("vendor", None),
-        ],
+        # set credentials from defaults
+        username=defaults.username if defaults.username else None,
+        password=defaults.password if defaults.password else None,
+        groups=[],
         data=data,
-        # set napalm platform
-        connection_options={
-            "napalm": {
-                "platform": napalm_platform_map.get(
-                    data["family"], data["family"]
-                )
-            }
-        },
+        connection_options={},
         defaults=defaults,
     )
 
@@ -94,9 +97,11 @@ class IPFabricInventory(Inventory):
         ipf_token: Optional[str] = None,
         ipf_snapshot: Optional[str] = "$last",
         ssl_verify: Union[bool, str] = False,
+        default: Optional[dict] = {},
+        defaults_data: Optional[dict] = {},
+        defaults_connection_options: Optional[dict] = {},
         **kwargs: Any,
     ) -> None:
-
         """
         IP Fabric plugin
         API docs https://docs.ipfabric.io/api/
@@ -126,6 +131,9 @@ class IPFabricInventory(Inventory):
         )
         self.ipf_snapshot = "$last"
         self.ssl_verify = False
+        self.default = default
+        self.defaults_data = defaults_data
+        self.defaults_connection_options = defaults_connection_options
 
     def load(self) -> Inventory:
         """
@@ -147,7 +155,6 @@ class IPFabricInventory(Inventory):
                 "Content-type": "application/json",
                 "Authorization": f"Basic {credentials}",
             }
-
         data = {
             "columns": [
                 "loginIp",
@@ -182,15 +189,18 @@ class IPFabricInventory(Inventory):
 
         ipf_devices = json.loads(deviceInventory.content).get("data")
 
-        defaults = Defaults()
-
         groups = Groups()
-        defaults = Defaults()
 
-        hosts = Hosts()
+        username = self.default.get("username", None)
+        password = self.default.get("password", None)
+        defaults = Defaults(username=username, password=password)
+
+        serialized_hosts = {}
         for device in ipf_devices:
-            hosts[device.get("loginIp")] = _get_inventory_element(
+            serialized_hosts[device.get("loginIp")] = _get_inventory_element(
                 Host, device, defaults
             )
 
-        return Inventory(hosts=hosts, groups=groups, defaults=defaults)
+        return Inventory(
+            hosts=serialized_hosts, groups=groups, defaults=defaults
+        )

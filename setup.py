@@ -9,7 +9,7 @@ with open("README.md", "r") as f:
 
 setuptools.setup(
     name="nornir_ipfabric",
-    version="0.1.3",
+    version="0.1.4",
     author=__author__,
     author_email="gp.boarina@gmail.com",
     description="nornir_ipfabric plugin for nornir",
