@@ -125,5 +125,4 @@ nr = InitNornir(config_file="config.yaml",inventory={"plugin": "IPFabricInventor
 - [IP Fabric channel on Slack ](https://networktocode.slack.com/)
 - [Nornir](https://github.com/nornir-automation/nornir)
 - [Nornir plugins page](https://nornir.tech/nornir/plugins/)
-- [Nornir Discourse Group](https://nornir.discourse.group)
 - [An Introduction to Nornir](https://pynet.twb-tech.com/blog/nornir/intro.html)
