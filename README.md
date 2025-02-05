@@ -22,7 +22,7 @@ pip install nornir-ipfabric
 
 # Requirements
 
-An instance of [IP Fabric](https://ipfabric.io/) is required to collect information. [Request trial license.](https://ipfabric.io/booking-trial/)
+An instance of [IP Fabric](https://ipfabric.io/) is required to collect information. [Request trial license.](https://ipfabric.io/freetrial/)
 
 
 # Example usage
@@ -37,7 +37,7 @@ export IPF_USER=admin
 export IPF_PASSWORD=mySecretPassword
 ```
 
-If IP Fabric version 3.7 or above is in use, [token authentication](https://ipfabric.atlassian.net/wiki/spaces/ND/pages/1448575064/API+tokens) is available
+If IP Fabric version 3.7 or above is in use, [token authentication](https://docs.ipfabric.io/main/IP_Fabric_API/authentication/) is available
 
 ```sh
 export IPF_URL=https://ipfabric.local
